@@ -1,0 +1,115 @@
+﻿@model HomeIndexViewModel
+@{
+    ViewData["Title"] = "报表首页";
+}
+
+<section class="rh-hero">
+    <div class="rh-hero-inner">
+        <h1 class="rh-hero-title">报表中心</h1>
+        <p class="rh-hero-sub">按分类浏览，或直接搜索你需要的报表</p>
+
+        <form asp-controller="Home" asp-action="Index" method="get" class="rh-search-form" role="search">
+            @if (Model.CategoryId.HasValue && Model.CategoryId.Value > 0)
+            {
+                <input type="hidden" name="categoryId" value="@Model.CategoryId" />
+            }
+            <div class="rh-search-group">
+                <input type="search"
+                       class="form-control rh-search-input"
+                       name="q"
+                       value="@Model.SearchTerm"
+                       placeholder="搜索报表名称或关键词，例如：销售、利润、库存"
+                       aria-label="搜索报表" />
+                <button class="btn rh-btn-primary" type="submit">搜索</button>
+            </div>
+            @if (Model.HasFilter)
+            {
+                <div class="mt-2">
+                    <a asp-controller="Home" asp-action="Index" class="rh-clear-filter">清除筛选条件</a>
+                </div>
+            }
+        </form>
+    </div>
+</section>
+
+@if (Model.DataUnavailable)
+{
+    <div class="rh-notice rh-notice-warning" role="alert">
+        <strong>暂时无法加载报表数据。</strong>
+        请确认数据库连接配置正确，或联系管理员处理。
+    </div>
+}
+else
+{
+    <nav class="rh-category-bar" aria-label="报表分类">
+        <a asp-controller="Home" asp-action="Index" asp-route-q="@Model.SearchTerm"
+           class="rh-pill @(Model.CategoryId is null or 0 ? "active" : "")">全部</a>
+
+        @foreach (var category in Model.Categories)
+        {
+            <a asp-controller="Home" asp-action="Index" asp-route-q="@Model.SearchTerm" asp-route-categoryId="@category.Id"
+               class="rh-pill @(Model.CategoryId == category.Id ? "active" : "")">@category.Name</a>
+        }
+    </nav>
+
+    <div class="rh-result-head">
+        <span>共 <strong>@Model.Reports.Count</strong> 个报表</span>
+        @if (!string.IsNullOrWhiteSpace(Model.SearchTerm))
+        {
+            <span class="rh-filter-tag">关键词：@Model.SearchTerm</span>
+        }
+        @if (!string.IsNullOrWhiteSpace(Model.CurrentCategoryName))
+        {
+            <span class="rh-filter-tag">分类：@Model.CurrentCategoryName</span>
+        }
+    </div>
+
+    @if (Model.Reports.Count == 0)
+    {
+        <div class="rh-empty">
+            <div class="rh-empty-icon">🔍</div>
+            <h5 class="rh-empty-title">没有找到匹配的报表</h5>
+            <p class="text-muted mb-3">
+                @if (Model.HasFilter)
+                {
+                    <text>试试更换关键词，或切换到其他分类。</text>
+                }
+                else
+                {
+                    <text>当前还没有已启用的报表，请管理员前往后台添加。</text>
+                }
+            </p>
+            @if (Model.HasFilter)
+            {
+                <a asp-controller="Home" asp-action="Index" class="btn rh-btn-outline">查看全部报表</a>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="row g-4 rh-report-grid">
+            @foreach (var report in Model.Reports)
+            {
+                <div class="col-xl-3 col-lg-4 col-md-6">
+                    <div class="card rh-report-card h-100">
+                        <div class="card-body d-flex flex-column">
+                            <div class="rh-report-head">
+                                <h5 class="rh-report-name">@report.Name</h5>
+                                <span class="rh-badge">@report.Category?.Name</span>
+                            </div>
+                            <p class="rh-report-desc">
+                                @(string.IsNullOrWhiteSpace(report.Description) ? "暂无说明" : report.Description)
+                            </p>
+                            <a href="@report.ReportUrl"
+                               target="_blank"
+                               rel="noopener noreferrer"
+                               class="rh-report-link stretched-link">
+                                打开报表 <span aria-hidden="true">↗</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+}

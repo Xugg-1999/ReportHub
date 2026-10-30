@@ -1,0 +1,35 @@
+@model Category
+@{
+    ViewData["Title"] = "删除分类";
+    var reportCount = (int)(ViewData["ReportCount"] ?? 0);
+}
+
+<div class="rh-admin-head">
+    <div>
+        <h1 class="rh-admin-title">删除分类</h1>
+        <p class="rh-admin-sub">@Model.Name</p>
+    </div>
+    <a class="btn rh-btn-outline" asp-action="Index">返回列表</a>
+</div>
+
+<div class="rh-form-card">
+    @if (reportCount > 0)
+    {
+        <div class="rh-notice rh-notice-danger">
+            该分类下还有 <strong>@reportCount</strong> 个报表，不能直接删除。请先把这些报表移到其他分类或删除。
+        </div>
+        <a asp-area="Admin" asp-controller="Reports" asp-action="Index" asp-route-categoryId="@Model.Id" class="btn rh-btn-outline">查看该分类下的报表</a>
+        <a asp-action="Index" class="btn btn-link">返回列表</a>
+    }
+    else
+    {
+        <div class="rh-notice rh-notice-danger mb-4">
+            确认删除分类「<strong>@Model.Name</strong>」？此操作不可撤销。
+        </div>
+
+        <form asp-action="Delete" asp-route-id="@Model.Id" method="post">
+            <button type="submit" class="btn btn-danger">确认删除</button>
+            <a asp-action="Index" class="btn btn-link">取消</a>
+        </form>
+    }
+</div>

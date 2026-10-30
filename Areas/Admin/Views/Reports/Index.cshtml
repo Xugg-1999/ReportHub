@@ -1,0 +1,113 @@
+@model List<Report>
+@{
+    ViewData["Title"] = "报表管理";
+    var categories = ViewBag.Categories as List<Category>;
+    var categoryId = ViewData["CategoryId"] as int?;
+    var searchTerm = ViewData["SearchTerm"] as string;
+    var dataUnavailable = ViewBag.DataUnavailable != null && (bool)ViewBag.DataUnavailable;
+}
+
+<div class="rh-admin-head">
+    <div>
+        <h1 class="rh-admin-title">报表管理</h1>
+        <p class="rh-admin-sub">维护报表名称、帆软地址、所属分类与启用状态</p>
+    </div>
+    <a class="btn rh-btn-primary" asp-action="Create">+ 新增报表</a>
+</div>
+
+<partial name="_AdminNav" />
+
+@if (dataUnavailable)
+{
+    <div class="rh-notice rh-notice-warning">
+        数据库暂不可用，无法加载报表数据。请先配置连接字符串并执行数据库迁移。
+    </div>
+}
+
+@if (TempData["Success"] is string success)
+{
+    <div class="rh-notice rh-notice-success">@success</div>
+}
+
+@if (TempData["Error"] is string error)
+{
+    <div class="rh-notice rh-notice-danger">@error</div>
+}
+
+<form method="get" asp-action="Index" class="rh-admin-filter">
+    <input name="q" value="@searchTerm" class="form-control rh-search-input" placeholder="搜索报表名称或关键词" />
+    <select name="categoryId" class="form-select rh-filter-select">
+        <option value="">全部分类</option>
+        @if (categories != null)
+        {
+            foreach (var category in categories)
+            {
+                <option value="@category.Id" selected="@(categoryId == category.Id ? "selected" : null)">@category.Name</option>
+            }
+        }
+    </select>
+    <button type="submit" class="btn rh-btn-outline">筛选</button>
+    <a asp-action="Index" class="rh-clear-filter">重置</a>
+</form>
+
+@if (Model.Count == 0)
+{
+    <div class="rh-empty">
+        <div class="rh-empty-icon">📄</div>
+        <div class="rh-empty-title">暂无报表</div>
+        <p class="text-muted mb-0">点击右上角「新增报表」添加第一条数据。</p>
+    </div>
+}
+else
+{
+    <div class="table-responsive rh-admin-table">
+        <table class="table align-middle mb-0">
+            <thead>
+                <tr>
+                    <th>报表</th>
+                    <th>分类</th>
+                    <th>地址</th>
+                    <th>状态</th>
+                    <th>排序</th>
+                    <th class="text-end">操作</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var report in Model)
+                {
+                    <tr>
+                        <td>
+                            <div class="fw-semibold">@report.Name</div>
+                            @if (!string.IsNullOrWhiteSpace(report.Keywords))
+                            {
+                                <div class="rh-muted small">@report.Keywords</div>
+                            }
+                        </td>
+                        <td>@report.Category?.Name</td>
+                        <td class="rh-url-cell">
+                            <a href="@report.ReportUrl" target="_blank" rel="noopener noreferrer">@report.ReportUrl</a>
+                        </td>
+                        <td>
+                            @if (report.IsActive)
+                            {
+                                <span class="rh-badge">已启用</span>
+                            }
+                            else
+                            {
+                                <span class="rh-badge rh-badge-off">已停用</span>
+                            }
+                        </td>
+                        <td>@report.SortOrder</td>
+                        <td class="text-end rh-actions">
+                            <a class="btn btn-sm btn-outline-secondary" asp-action="Edit" asp-route-id="@report.Id">编辑</a>
+                            <form asp-action="ToggleActive" asp-route-id="@report.Id" method="post" class="d-inline">
+                                <button type="submit" class="btn btn-sm btn-outline-primary">@(report.IsActive ? "停用" : "启用")</button>
+                            </form>
+                            <a class="btn btn-sm btn-outline-danger" asp-action="Delete" asp-route-id="@report.Id">删除</a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}

@@ -1,0 +1,72 @@
+@model List<Category>
+@{
+    ViewData["Title"] = "分类管理";
+    var dataUnavailable = ViewBag.DataUnavailable != null && (bool)ViewBag.DataUnavailable;
+}
+
+<div class="rh-admin-head">
+    <div>
+        <h1 class="rh-admin-title">分类管理</h1>
+        <p class="rh-admin-sub">分类用于首页导航，删除前需先处理分类下的报表</p>
+    </div>
+    <a class="btn rh-btn-primary" asp-action="Create">+ 新增分类</a>
+</div>
+
+<partial name="_AdminNav" />
+
+@if (dataUnavailable)
+{
+    <div class="rh-notice rh-notice-warning">
+        数据库暂不可用，无法加载分类数据。请先配置连接字符串并执行数据库迁移。
+    </div>
+}
+
+@if (TempData["Success"] is string success)
+{
+    <div class="rh-notice rh-notice-success">@success</div>
+}
+
+@if (TempData["Error"] is string error)
+{
+    <div class="rh-notice rh-notice-danger">@error</div>
+}
+
+@if (Model.Count == 0)
+{
+    <div class="rh-empty">
+        <div class="rh-empty-icon">🗂️</div>
+        <div class="rh-empty-title">暂无分类</div>
+        <p class="text-muted mb-0">点击右上角「新增分类」创建第一个分类。</p>
+    </div>
+}
+else
+{
+    <div class="table-responsive rh-admin-table">
+        <table class="table align-middle mb-0">
+            <thead>
+                <tr>
+                    <th>分类名称</th>
+                    <th>说明</th>
+                    <th>报表数</th>
+                    <th>排序</th>
+                    <th class="text-end">操作</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var category in Model)
+                {
+                    <tr>
+                        <td class="fw-semibold">@category.Name</td>
+                        <td class="rh-muted">@category.Description</td>
+                        <td>@category.Reports.Count</td>
+                        <td>@category.SortOrder</td>
+                        <td class="text-end rh-actions">
+                            <a class="btn btn-sm btn-outline-secondary" asp-action="Edit" asp-route-id="@category.Id">编辑</a>
+                            <a class="btn btn-sm btn-outline-danger" asp-action="Delete" asp-route-id="@category.Id">删除</a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}

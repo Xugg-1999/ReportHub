@@ -1,0 +1,10 @@
+<ul class="nav nav-pills rh-admin-nav">
+    <li class="nav-item">
+        <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Reports" ? "active" : "")"
+           asp-area="Admin" asp-controller="Reports" asp-action="Index">报表管理</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Categories" ? "active" : "")"
+           asp-area="Admin" asp-controller="Categories" asp-action="Index">分类管理</a>
+    </li>
+</ul>

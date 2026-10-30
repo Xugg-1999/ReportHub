@@ -1,0 +1,26 @@
+@model Category
+@{
+    ViewData["Title"] = "新增分类";
+}
+
+<div class="rh-admin-head">
+    <div>
+        <h1 class="rh-admin-title">新增分类</h1>
+        <p class="rh-admin-sub">分类会作为首页的筛选入口</p>
+    </div>
+    <a class="btn rh-btn-outline" asp-action="Index">返回列表</a>
+</div>
+
+<div class="rh-form-card">
+    <form asp-action="Create" method="post">
+        <partial name="_CategoryForm" model="Model" />
+        <div class="rh-form-actions">
+            <button type="submit" class="btn rh-btn-primary">保存</button>
+            <a asp-action="Index" class="btn btn-link">取消</a>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

@@ -1,0 +1,51 @@
+@model Report
+
+<div asp-validation-summary="ModelOnly" class="text-danger small mb-3"></div>
+
+<div class="row g-3">
+    <div class="col-md-8">
+        <label asp-for="Name" class="form-label">报表名称</label>
+        <input asp-for="Name" class="form-control" placeholder="例如：销售日报" />
+        <span asp-validation-for="Name" class="text-danger small"></span>
+    </div>
+
+    <div class="col-md-4">
+        <label asp-for="CategoryId" class="form-label">所属分类</label>
+        <select asp-for="CategoryId" asp-items="ViewBag.Categories" class="form-select">
+            <option value="">请选择分类</option>
+        </select>
+        <span asp-validation-for="CategoryId" class="text-danger small"></span>
+    </div>
+
+    <div class="col-12">
+        <label asp-for="ReportUrl" class="form-label">帆软报表 URL</label>
+        <input asp-for="ReportUrl" class="form-control" placeholder="http://fanruan.example.com/..." />
+        <span asp-validation-for="ReportUrl" class="text-danger small"></span>
+    </div>
+
+    <div class="col-12">
+        <label asp-for="Description" class="form-label">报表说明</label>
+        <textarea asp-for="Description" class="form-control" rows="2" placeholder="简要说明报表用途（可选）"></textarea>
+        <span asp-validation-for="Description" class="text-danger small"></span>
+    </div>
+
+    <div class="col-md-8">
+        <label asp-for="Keywords" class="form-label">搜索关键词</label>
+        <input asp-for="Keywords" class="form-control" placeholder="多个关键词用英文逗号分隔（可选）" />
+        <span asp-validation-for="Keywords" class="text-danger small"></span>
+    </div>
+
+    <div class="col-md-4">
+        <label asp-for="SortOrder" class="form-label">排序号</label>
+        <input asp-for="SortOrder" class="form-control" type="number" />
+        <div class="form-text">数值越小越靠前</div>
+        <span asp-validation-for="SortOrder" class="text-danger small"></span>
+    </div>
+
+    <div class="col-12">
+        <div class="form-check">
+            <input asp-for="IsActive" class="form-check-input" />
+            <label asp-for="IsActive" class="form-check-label">启用（首页可见）</label>
+        </div>
+    </div>
+</div>

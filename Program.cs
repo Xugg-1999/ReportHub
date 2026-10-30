@@ -14,8 +14,8 @@ var connectionString = builder.Configuration.GetConnectionString("DefaultConnect
 if (string.IsNullOrWhiteSpace(connectionString))
 {
     // 未配置时使用占位连接，保证项目可以正常启动查看界面
-    //connectionString = "Server=192.168.167.212;Port=3307;Database=reporthub;CharSet=utf8mb4;";
-    connectionString = "server=192.168.167.212;port=3307;database=reporthub;user=root;password=sgrs_passw0rd;charset=utf8;SslMode=Preferred;";
+    connectionString = "Server=192.168.167.212;Port=3307;Database=reporthub;CharSet=utf8mb4;";
+    //connectionString = "server=192.168.167.212;port=3307;database=reporthub;user=root;password=sgrs_passw0rd;charset=utf8;SslMode=Preferred;";
 }
 
 // 固定 MySQL 版本，避免设计时和运行时都需要连接数据库检测版本

@@ -6,7 +6,8 @@
 <section class="rh-hero">
     <div class="rh-hero-inner">
         <h1 class="rh-hero-title">报表中心</h1>
-        <p class="rh-hero-sub">按分类浏览，或直接搜索你需要的报表</p>
+        <p class="rh-hero-sub"> </p>
+      @*   <p class="rh-hero-sub">按分类浏览，或直接搜索你需要的报表</p> *@
 
         <form asp-controller="Home" asp-action="Index" method="get" class="rh-search-form" role="search">
             @if (Model.CategoryId.HasValue && Model.CategoryId.Value > 0)
@@ -18,7 +19,7 @@
                        class="form-control rh-search-input"
                        name="q"
                        value="@Model.SearchTerm"
-                       placeholder="搜索报表名称或关键词，例如：销售、利润、库存"
+                       placeholder="搜索报表名称或关键词"
                        aria-label="搜索报表" />
                 <button class="btn rh-btn-primary" type="submit">搜索</button>
             </div>
@@ -87,18 +88,18 @@ else
     }
     else
     {
-        <div class="row g-4 rh-report-grid">
+        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 row-cols-xxl-5 g-3 rh-report-grid">
             @foreach (var report in Model.Reports)
             {
-                <div class="col-xl-3 col-lg-4 col-md-6">
+                <div class="col">
                     <div class="card rh-report-card h-100">
                         <div class="card-body d-flex flex-column">
                             <div class="rh-report-head">
                                 <h5 class="rh-report-name">@report.Name</h5>
                                 <span class="rh-badge">@report.Category?.Name</span>
                             </div>
-                            <p class="rh-report-desc">
-                                @(string.IsNullOrWhiteSpace(report.Description) ? "暂无说明" : report.Description)
+                            <p class="rh-report-desc" data-desc="@(string.IsNullOrWhiteSpace(report.Description) ? null : report.Description)">
+                                <span class="rh-report-desc-text">@(string.IsNullOrWhiteSpace(report.Description) ? "暂无说明" : report.Description)</span>
                             </p>
                             <a href="@report.ReportUrl"
                                target="_blank"

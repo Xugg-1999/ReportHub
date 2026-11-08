@@ -16,21 +16,22 @@ public class ReportService : IReportService
         _context = context;
     }
 
-    public async Task<List<Category>> GetCategoriesAsync()
+    public async Task<List<Category>> GetCategoriesAsync(string homeCode)
     {
         return await _context.Categories
             .AsNoTracking()
+            .Where(c => c.HomeCode == homeCode)
             .OrderBy(c => c.SortOrder)
             .ThenBy(c => c.Id)
             .ToListAsync();
     }
 
-    public async Task<List<Report>> GetActiveReportsAsync(string? keyword, int? categoryId)
+    public async Task<List<Report>> GetActiveReportsAsync(string homeCode, string? keyword, int? categoryId)
     {
         var query = _context.Reports
             .AsNoTracking()
             .Include(r => r.Category)
-            .Where(r => r.IsActive);
+            .Where(r => r.HomeCode == homeCode && r.IsActive);
 
         if (categoryId.HasValue && categoryId.Value > 0)
         {

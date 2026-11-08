@@ -25,23 +25,29 @@ public class AppDbContext : IdentityDbContext<IdentityUser>
         modelBuilder.Entity<Category>(entity =>
         {
             entity.HasKey(e => e.Id);
+            entity.Property(e => e.HomeCode).HasMaxLength(50).IsRequired().HasDefaultValue(HomeDefinitions.DefaultCode);
             entity.Property(e => e.Name).HasMaxLength(50).IsRequired();
             entity.Property(e => e.Description).HasMaxLength(200);
             entity.Property(e => e.SortOrder).HasDefaultValue(0);
 
-            entity.HasIndex(e => e.Name).IsUnique();
+            // 不同首页下分类名称可以相同（各自独立维护），同首页内唯一
+            entity.HasIndex(e => new { e.HomeCode, e.Name }).IsUnique();
         });
 
         // Report 配置
         modelBuilder.Entity<Report>(entity =>
         {
             entity.HasKey(e => e.Id);
+            entity.Property(e => e.HomeCode).HasMaxLength(50).IsRequired().HasDefaultValue(HomeDefinitions.DefaultCode);
             entity.Property(e => e.Name).HasMaxLength(100).IsRequired();
             entity.Property(e => e.ReportUrl).HasMaxLength(500).IsRequired();
             entity.Property(e => e.Description).HasMaxLength(500);
             entity.Property(e => e.Keywords).HasMaxLength(200);
             entity.Property(e => e.IsActive).HasDefaultValue(true);
             entity.Property(e => e.SortOrder).HasDefaultValue(0);
+
+            // 常用查询：按首页 + 启用 + 排序
+            entity.HasIndex(e => new { e.HomeCode, e.IsActive, e.SortOrder });
 
             // 外键关系
             entity.HasOne(d => d.Category)

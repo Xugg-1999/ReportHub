@@ -26,9 +26,12 @@ public class ReportsController : Controller
     /// <summary>
     /// 报表列表：包含已停用报表，可按分类筛选与名称搜索
     /// </summary>
-    public async Task<IActionResult> Index(string? q, int? categoryId)
+    public async Task<IActionResult> Index(string? homeCode, string? q, int? categoryId)
     {
+        var currentHome = HomeDefinitions.Find(homeCode) ?? HomeDefinitions.Fine;
         ViewData["Title"] = "报表管理";
+        ViewData["HomeCode"] = currentHome.Code;
+        ViewData["HomeList"] = new SelectList(HomeDefinitions.All, nameof(HomeDef.Code), nameof(HomeDef.DisplayName), currentHome.Code);
         ViewData["SearchTerm"] = q;
         ViewData["CategoryId"] = categoryId;
 
@@ -36,6 +39,7 @@ public class ReportsController : Controller
         {
             ViewBag.Categories = await _context.Categories
                 .AsNoTracking()
+                .Where(c => c.HomeCode == currentHome.Code)
                 .OrderBy(c => c.SortOrder)
                 .ThenBy(c => c.Id)
                 .ToListAsync();
@@ -43,6 +47,7 @@ public class ReportsController : Controller
             var query = _context.Reports
                 .AsNoTracking()
                 .Include(r => r.Category)
+                .Where(r => r.HomeCode == currentHome.Code)
                 .AsQueryable();
 
             if (categoryId.HasValue && categoryId.Value > 0)
@@ -65,7 +70,7 @@ public class ReportsController : Controller
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "加载报表管理列表失败");
+            _logger.LogError(ex, "加载报表管理列表失败（HomeCode={HomeCode}）", currentHome.Code);
             ViewBag.DataUnavailable = true;
             ViewBag.Categories = new List<Category>();
             return View(new List<Report>());
@@ -73,27 +78,33 @@ public class ReportsController : Controller
     }
 
     [HttpGet]
-    public async Task<IActionResult> Create()
+    public async Task<IActionResult> Create(string? homeCode)
     {
+        var currentHome = HomeDefinitions.Find(homeCode) ?? HomeDefinitions.Fine;
         ViewData["Title"] = "新增报表";
-        await LoadCategorySelectAsync();
-        return View(new Report());
+        ViewData["HomeCode"] = currentHome.Code;
+        await LoadCategorySelectAsync(currentHome.Code);
+        return View(new Report { HomeCode = currentHome.Code });
     }
 
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Create(Report report)
     {
-        ViewData["Title"] = "新增报表";
+        var currentHome = HomeDefinitions.Find(report.HomeCode) ?? HomeDefinitions.Fine;
+        report.HomeCode = currentHome.Code;
 
-        if (!await CategoryExistsAsync(report.CategoryId))
+        ViewData["Title"] = "新增报表";
+        ViewData["HomeCode"] = currentHome.Code;
+
+        if (!await CategoryExistsAsync(report.CategoryId, currentHome.Code))
         {
-            ModelState.AddModelError(nameof(Report.CategoryId), "请选择有效的分类");
+            ModelState.AddModelError(nameof(Report.CategoryId), "请选择当前首页下有效的分类");
         }
 
         if (!ModelState.IsValid)
         {
-            await LoadCategorySelectAsync(report.CategoryId);
+            await LoadCategorySelectAsync(currentHome.Code, report.CategoryId);
             return View(report);
         }
 
@@ -106,7 +117,7 @@ public class ReportsController : Controller
         await _context.SaveChangesAsync();
 
         TempData["Success"] = $"报表「{report.Name}」已创建";
-        return RedirectToAction(nameof(Index));
+        return RedirectToAction(nameof(Index), new { homeCode = currentHome.Code });
     }
 
     [HttpGet]
@@ -119,7 +130,8 @@ public class ReportsController : Controller
         }
 
         ViewData["Title"] = "编辑报表";
-        await LoadCategorySelectAsync(report.CategoryId);
+        ViewData["HomeCode"] = report.HomeCode;
+        await LoadCategorySelectAsync(report.HomeCode, report.CategoryId);
         return View(report);
     }
 
@@ -127,28 +139,30 @@ public class ReportsController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Edit(int id, Report report)
     {
-        ViewData["Title"] = "编辑报表";
-
         if (id != report.Id)
         {
             return NotFound();
-        }
-
-        if (!await CategoryExistsAsync(report.CategoryId))
-        {
-            ModelState.AddModelError(nameof(Report.CategoryId), "请选择有效的分类");
-        }
-
-        if (!ModelState.IsValid)
-        {
-            await LoadCategorySelectAsync(report.CategoryId);
-            return View(report);
         }
 
         var entity = await _context.Reports.FirstOrDefaultAsync(r => r.Id == id);
         if (entity is null)
         {
             return NotFound();
+        }
+
+        ViewData["Title"] = "编辑报表";
+        ViewData["HomeCode"] = entity.HomeCode;
+
+        if (!await CategoryExistsAsync(report.CategoryId, entity.HomeCode))
+        {
+            ModelState.AddModelError(nameof(Report.CategoryId), "请选择当前首页下有效的分类");
+        }
+
+        if (!ModelState.IsValid)
+        {
+            report.HomeCode = entity.HomeCode;
+            await LoadCategorySelectAsync(entity.HomeCode, report.CategoryId);
+            return View(report);
         }
 
         entity.Name = report.Name.Trim();
@@ -162,7 +176,7 @@ public class ReportsController : Controller
         await _context.SaveChangesAsync();
 
         TempData["Success"] = $"报表「{entity.Name}」已保存";
-        return RedirectToAction(nameof(Index));
+        return RedirectToAction(nameof(Index), new { homeCode = entity.HomeCode });
     }
 
     /// <summary>
@@ -182,7 +196,7 @@ public class ReportsController : Controller
         await _context.SaveChangesAsync();
 
         TempData["Success"] = entity.IsActive ? $"报表「{entity.Name}」已启用" : $"报表「{entity.Name}」已停用";
-        return RedirectToAction(nameof(Index));
+        return RedirectToAction(nameof(Index), new { homeCode = entity.HomeCode });
     }
 
     [HttpGet]
@@ -216,18 +230,19 @@ public class ReportsController : Controller
         await _context.SaveChangesAsync();
 
         TempData["Success"] = $"报表「{entity.Name}」已删除";
-        return RedirectToAction(nameof(Index));
+        return RedirectToAction(nameof(Index), new { homeCode = entity.HomeCode });
     }
 
-    private async Task<bool> CategoryExistsAsync(int categoryId)
+    private async Task<bool> CategoryExistsAsync(int categoryId, string homeCode)
     {
-        return await _context.Categories.AnyAsync(c => c.Id == categoryId);
+        return await _context.Categories.AnyAsync(c => c.Id == categoryId && c.HomeCode == homeCode);
     }
 
-    private async Task LoadCategorySelectAsync(int? selectedId = null)
+    private async Task LoadCategorySelectAsync(string homeCode, int? selectedId = null)
     {
         var categories = await _context.Categories
             .AsNoTracking()
+            .Where(c => c.HomeCode == homeCode)
             .OrderBy(c => c.SortOrder)
             .ThenBy(c => c.Id)
             .ToListAsync();

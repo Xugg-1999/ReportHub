@@ -1,6 +1,7 @@
 @model List<Category>
 @{
     ViewData["Title"] = "分类管理";
+    var homeCode = ViewData["HomeCode"] as string;
     var dataUnavailable = ViewBag.DataUnavailable != null && (bool)ViewBag.DataUnavailable;
 }
 
@@ -9,10 +10,11 @@
         <h1 class="rh-admin-title">分类管理</h1>
         <p class="rh-admin-sub">分类用于首页导航，删除前需先处理分类下的报表</p>
     </div>
-    <a class="btn rh-btn-primary" asp-action="Create">+ 新增分类</a>
+    <a class="btn rh-btn-primary" asp-action="Create" asp-route-homeCode="@homeCode">+ 新增分类</a>
 </div>
 
 <partial name="_AdminNav" />
+<partial name="_HomeSelector" />
 
 @if (dataUnavailable)
 {

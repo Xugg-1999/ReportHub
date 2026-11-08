@@ -2,6 +2,9 @@
 
 <div asp-validation-summary="ModelOnly" class="text-danger small mb-3"></div>
 
+@* HomeCode 由控制器根据当前首页注入，不暴露给用户编辑 *@
+<input asp-for="HomeCode" type="hidden" />
+
 <div class="row g-3">
     <div class="col-md-8">
         <label asp-for="Name" class="form-label">报表名称</label>

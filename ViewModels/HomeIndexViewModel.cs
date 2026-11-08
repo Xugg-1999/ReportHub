@@ -8,12 +8,22 @@ namespace ReportHub.ViewModels;
 public class HomeIndexViewModel
 {
     /// <summary>
+    /// 当前首页编码
+    /// </summary>
+    public string HomeCode { get; set; } = HomeDefinitions.DefaultCode;
+
+    /// <summary>
+    /// 当前首页定义（标题、展示名等）
+    /// </summary>
+    public HomeDef CurrentHome => HomeDefinitions.Find(HomeCode) ?? HomeDefinitions.Fine;
+
+    /// <summary>
     /// 当前筛选条件下的启用报表
     /// </summary>
     public IReadOnlyList<Report> Reports { get; set; } = [];
 
     /// <summary>
-    /// 全部分类（用于分类导航）
+    /// 当前首页的全部分类（用于分类导航）
     /// </summary>
     public IReadOnlyList<Category> Categories { get; set; } = [];
 

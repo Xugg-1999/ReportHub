@@ -1,15 +1,15 @@
-﻿@model HomeIndexViewModel
+@model HomeIndexViewModel
 @{
-    ViewData["Title"] = "报表首页";
+    ViewData["Title"] = Model.CurrentHome.DisplayName;
 }
 
 <section class="rh-hero">
     <div class="rh-hero-inner">
-        <h1 class="rh-hero-title">报表中心</h1>
-        <p class="rh-hero-sub"> </p>
-      @*   <p class="rh-hero-sub">按分类浏览，或直接搜索你需要的报表</p> *@
+        <h1 class="rh-hero-title">@Model.CurrentHome.HeroTitle</h1>
+        <p class="rh-hero-sub">按分类浏览，或直接搜索你需要的报表</p>
 
         <form asp-controller="Home" asp-action="Index" method="get" class="rh-search-form" role="search">
+            <input type="hidden" name="homeCode" value="@Model.HomeCode" />
             @if (Model.CategoryId.HasValue && Model.CategoryId.Value > 0)
             {
                 <input type="hidden" name="categoryId" value="@Model.CategoryId" />
@@ -26,7 +26,7 @@
             @if (Model.HasFilter)
             {
                 <div class="mt-2">
-                    <a asp-controller="Home" asp-action="Index" class="rh-clear-filter">清除筛选条件</a>
+                    <a asp-controller="Home" asp-action="Index" asp-route-homeCode="@Model.HomeCode" class="rh-clear-filter">清除筛选条件</a>
                 </div>
             }
         </form>
@@ -43,12 +43,12 @@
 else
 {
     <nav class="rh-category-bar" aria-label="报表分类">
-        <a asp-controller="Home" asp-action="Index" asp-route-q="@Model.SearchTerm"
+        <a asp-controller="Home" asp-action="Index" asp-route-homeCode="@Model.HomeCode" asp-route-q="@Model.SearchTerm"
            class="rh-pill @(Model.CategoryId is null or 0 ? "active" : "")">全部</a>
 
         @foreach (var category in Model.Categories)
         {
-            <a asp-controller="Home" asp-action="Index" asp-route-q="@Model.SearchTerm" asp-route-categoryId="@category.Id"
+            <a asp-controller="Home" asp-action="Index" asp-route-homeCode="@Model.HomeCode" asp-route-q="@Model.SearchTerm" asp-route-categoryId="@category.Id"
                class="rh-pill @(Model.CategoryId == category.Id ? "active" : "")">@category.Name</a>
         }
     </nav>
@@ -77,12 +77,12 @@ else
                 }
                 else
                 {
-                    <text>当前还没有已启用的报表，请管理员前往后台添加。</text>
+                    <text>当前首页还没有已启用的报表，请管理员前往后台添加。</text>
                 }
             </p>
             @if (Model.HasFilter)
             {
-                <a asp-controller="Home" asp-action="Index" class="btn rh-btn-outline">查看全部报表</a>
+                <a asp-controller="Home" asp-action="Index" asp-route-homeCode="@Model.HomeCode" class="btn rh-btn-outline">查看全部报表</a>
             }
         </div>
     }

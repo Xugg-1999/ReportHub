@@ -18,27 +18,34 @@ public class HomeController : Controller
     }
 
     /// <summary>
-    /// 报表首页：展示已启用报表，支持关键词搜索与分类筛选（可同时使用）
+    /// 报表首页：展示指定首页的已启用报表，支持关键词搜索与分类筛选（可同时使用）
+    /// 默认首页编码 FINE 保持向后兼容（现有帆软数据全在 FINE 下）
     /// </summary>
+    /// <param name="homeCode">首页编码，如 FINE / PROD；空或无效时回退到 FINE</param>
     /// <param name="q">搜索关键词</param>
     /// <param name="categoryId">分类 Id</param>
-    public async Task<IActionResult> Index(string? q, int? categoryId)
+    public async Task<IActionResult> Index(string? homeCode, string? q, int? categoryId)
     {
+        var currentHome = HomeDefinitions.Find(homeCode) ?? HomeDefinitions.Fine;
+
+        ViewData["CurrentHomeCode"] = currentHome.Code;
+
         var model = new HomeIndexViewModel
         {
+            HomeCode = currentHome.Code,
             SearchTerm = q?.Trim(),
             CategoryId = categoryId
         };
 
         try
         {
-            model.Categories = await _reportService.GetCategoriesAsync();
-            model.Reports = await _reportService.GetActiveReportsAsync(model.SearchTerm, categoryId);
+            model.Categories = await _reportService.GetCategoriesAsync(currentHome.Code);
+            model.Reports = await _reportService.GetActiveReportsAsync(currentHome.Code, model.SearchTerm, categoryId);
         }
         catch (Exception ex)
         {
             // 数据库未配置或连接失败时，页面给出友好提示而不是抛出 500
-            _logger.LogError(ex, "加载报表首页数据失败");
+            _logger.LogError(ex, "加载报表首页数据失败（HomeCode={HomeCode}）", currentHome.Code);
             model.DataUnavailable = true;
         }
 

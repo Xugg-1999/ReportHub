@@ -4,18 +4,20 @@
     var categories = ViewBag.Categories as List<Category>;
     var categoryId = ViewData["CategoryId"] as int?;
     var searchTerm = ViewData["SearchTerm"] as string;
+    var homeCode = ViewData["HomeCode"] as string;
     var dataUnavailable = ViewBag.DataUnavailable != null && (bool)ViewBag.DataUnavailable;
 }
 
 <div class="rh-admin-head">
     <div>
         <h1 class="rh-admin-title">报表管理</h1>
-        <p class="rh-admin-sub">维护报表名称、帆软地址、所属分类与启用状态</p>
+        <p class="rh-admin-sub">维护报表名称、URL、所属分类与启用状态</p>
     </div>
-    <a class="btn rh-btn-primary" asp-action="Create">+ 新增报表</a>
+    <a class="btn rh-btn-primary" asp-action="Create" asp-route-homeCode="@homeCode">+ 新增报表</a>
 </div>
 
 <partial name="_AdminNav" />
+<partial name="_HomeSelector" />
 
 @if (dataUnavailable)
 {
@@ -35,6 +37,7 @@
 }
 
 <form method="get" asp-action="Index" class="rh-admin-filter">
+    <input type="hidden" name="homeCode" value="@homeCode" />
     <input name="q" value="@searchTerm" class="form-control rh-search-input" placeholder="搜索报表名称或关键词" />
     <select name="categoryId" class="form-select rh-filter-select">
         <option value="">全部分类</option>
@@ -47,7 +50,7 @@
         }
     </select>
     <button type="submit" class="btn rh-btn-outline">筛选</button>
-    <a asp-action="Index" class="rh-clear-filter">重置</a>
+    <a asp-action="Index" asp-route-homeCode="@homeCode" class="rh-clear-filter">重置</a>
 </form>
 
 @if (Model.Count == 0)

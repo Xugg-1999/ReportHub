@@ -20,10 +20,17 @@
                     <span class="navbar-toggler-icon"></span>
                 </button>
                 <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                    <ul class="navbar-nav flex-grow-1">
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">报表首页</a>
-                        </li>
+                    <ul class="navbar-nav flex-grow-1 rh-home-nav">
+                        @* 多个首页并列入口，当前页面的 homeCode 由控制器写入 ViewData*@
+                        @foreach (var home in HomeDefinitions.All)
+                        {
+                            var active = (string?)ViewData["CurrentHomeCode"] == home.Code;
+                            <li class="nav-item">
+                                <a class="nav-link text-dark @(active ? "rh-home-active" : "")"
+                                   asp-area="" asp-controller="Home" asp-action="Index"
+                                   asp-route-homeCode="@home.Code">@home.DisplayName</a>
+                            </li>
+                        }
                         @if (User.Identity?.IsAuthenticated == true)
                         {
                             <li class="nav-item">
@@ -61,10 +68,6 @@
     <footer class="border-top footer text-muted">
         <div class="container-fluid px-4 d-flex flex-wrap align-items-center gap-2">
             <span>&copy; 2026 <a class="rh-footer-link" href="mailto:guangge_xu@outlook.com" title="Contact the author">ReportHub</a> - 企业内部报表导航</span>
-            @* <span class="rh-footer-sep" aria-hidden="true">|</span> *@
-            @* <a class="rh-footer-link" href="mailto:guangge_xu@outlook.com" title="发送邮件给我"> *@
-                @* ✉ Xugg1999@outlook.com *@
-            @* </a> *@
         </div>
     </footer>
     <script src="~/lib/jquery/dist/jquery.min.js"></script>

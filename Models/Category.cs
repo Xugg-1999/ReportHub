@@ -9,6 +9,13 @@ public class Category
 {
     public int Id { get; set; }
 
+    /// <summary>
+    /// 所属首页编码（FINE=帆软、PROD=生产），用于隔离不同首页的分类
+    /// </summary>
+    [Required(ErrorMessage = "首页编码不能为空")]
+    [StringLength(50, ErrorMessage = "首页编码不能超过 50 个字符")]
+    public string HomeCode { get; set; } = HomeDefinitions.Fine.Code;
+
     [Required(ErrorMessage = "分类名称不能为空")]
     [StringLength(50, ErrorMessage = "分类名称不能超过 50 个字符")]
     public string Name { get; set; } = string.Empty;

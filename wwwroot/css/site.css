@@ -30,6 +30,13 @@ body {
     font-family: -apple-system, "Segoe UI", "Microsoft YaHei", sans-serif;
 }
 
+/* 导航栏多个首页入口：当前首页高亮 */
+.rh-home-nav .nav-link.rh-home-active {
+    color: var(--rh-primary-dark) !important;
+    font-weight: 600;
+    border-bottom: 2px solid var(--rh-primary);
+}
+
 /* 导航栏 */
 .rh-navbar {
     background-color: #ffffff;

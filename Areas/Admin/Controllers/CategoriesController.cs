@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using ReportHub.Data;
 using ReportHub.Models;
@@ -22,15 +23,20 @@ public class CategoriesController : Controller
         _logger = logger;
     }
 
-    public async Task<IActionResult> Index()
+    public async Task<IActionResult> Index(string? homeCode)
     {
+        var currentHome = HomeDefinitions.Find(homeCode) ?? HomeDefinitions.Fine;
+
         ViewData["Title"] = "分类管理";
+        ViewData["HomeCode"] = currentHome.Code;
+        ViewData["HomeList"] = new SelectList(HomeDefinitions.All, nameof(HomeDef.Code), nameof(HomeDef.DisplayName), currentHome.Code);
 
         try
         {
             var categories = await _context.Categories
                 .AsNoTracking()
                 .Include(c => c.Reports)
+                .Where(c => c.HomeCode == currentHome.Code)
                 .OrderBy(c => c.SortOrder)
                 .ThenBy(c => c.Id)
                 .ToListAsync();
@@ -39,30 +45,36 @@ public class CategoriesController : Controller
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "加载分类管理列表失败");
+            _logger.LogError(ex, "加载分类管理列表失败（HomeCode={HomeCode}）", currentHome.Code);
             ViewBag.DataUnavailable = true;
             return View(new List<Category>());
         }
     }
 
     [HttpGet]
-    public IActionResult Create()
+    public IActionResult Create(string? homeCode)
     {
+        var currentHome = HomeDefinitions.Find(homeCode) ?? HomeDefinitions.Fine;
         ViewData["Title"] = "新增分类";
-        return View(new Category());
+        ViewData["HomeCode"] = currentHome.Code;
+        return View(new Category { HomeCode = currentHome.Code });
     }
 
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Create(Category category)
     {
+        var currentHome = HomeDefinitions.Find(category.HomeCode) ?? HomeDefinitions.Fine;
+        category.HomeCode = currentHome.Code;
+
         ViewData["Title"] = "新增分类";
+        ViewData["HomeCode"] = currentHome.Code;
 
         category.Name = category.Name.Trim();
 
-        if (await _context.Categories.AnyAsync(c => c.Name == category.Name))
+        if (await _context.Categories.AnyAsync(c => c.HomeCode == currentHome.Code && c.Name == category.Name))
         {
-            ModelState.AddModelError(nameof(Category.Name), "该分类名称已存在");
+            ModelState.AddModelError(nameof(Category.Name), "当前首页下已存在同名分类");
         }
 
         if (!ModelState.IsValid)
@@ -75,7 +87,7 @@ public class CategoriesController : Controller
         await _context.SaveChangesAsync();
 
         TempData["Success"] = $"分类「{category.Name}」已创建";
-        return RedirectToAction(nameof(Index));
+        return RedirectToAction(nameof(Index), new { homeCode = currentHome.Code });
     }
 
     [HttpGet]
@@ -88,6 +100,7 @@ public class CategoriesController : Controller
         }
 
         ViewData["Title"] = "编辑分类";
+        ViewData["HomeCode"] = category.HomeCode;
         return View(category);
     }
 
@@ -95,29 +108,31 @@ public class CategoriesController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Edit(int id, Category category)
     {
-        ViewData["Title"] = "编辑分类";
-
         if (id != category.Id)
         {
             return NotFound();
-        }
-
-        category.Name = category.Name.Trim();
-
-        if (await _context.Categories.AnyAsync(c => c.Name == category.Name && c.Id != id))
-        {
-            ModelState.AddModelError(nameof(Category.Name), "该分类名称已存在");
-        }
-
-        if (!ModelState.IsValid)
-        {
-            return View(category);
         }
 
         var entity = await _context.Categories.FirstOrDefaultAsync(c => c.Id == id);
         if (entity is null)
         {
             return NotFound();
+        }
+
+        ViewData["Title"] = "编辑分类";
+        ViewData["HomeCode"] = entity.HomeCode;
+
+        category.Name = category.Name.Trim();
+
+        if (await _context.Categories.AnyAsync(c => c.HomeCode == entity.HomeCode && c.Name == category.Name && c.Id != id))
+        {
+            ModelState.AddModelError(nameof(Category.Name), "当前首页下已存在同名分类");
+        }
+
+        if (!ModelState.IsValid)
+        {
+            category.HomeCode = entity.HomeCode;
+            return View(category);
         }
 
         entity.Name = category.Name;
@@ -127,7 +142,7 @@ public class CategoriesController : Controller
         await _context.SaveChangesAsync();
 
         TempData["Success"] = $"分类「{entity.Name}」已保存";
-        return RedirectToAction(nameof(Index));
+        return RedirectToAction(nameof(Index), new { homeCode = entity.HomeCode });
     }
 
     [HttpGet]
@@ -159,13 +174,13 @@ public class CategoriesController : Controller
         if (reportCount > 0)
         {
             TempData["Error"] = $"分类「{category.Name}」下还有 {reportCount} 个报表，无法删除。请先调整或删除这些报表。";
-            return RedirectToAction(nameof(Index));
+            return RedirectToAction(nameof(Index), new { homeCode = category.HomeCode });
         }
 
         _context.Categories.Remove(category);
         await _context.SaveChangesAsync();
 
         TempData["Success"] = $"分类「{category.Name}」已删除";
-        return RedirectToAction(nameof(Index));
+        return RedirectToAction(nameof(Index), new { homeCode = category.HomeCode });
     }
 }
